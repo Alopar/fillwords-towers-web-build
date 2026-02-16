@@ -121,6 +121,16 @@ body {
     z-index: 30;
 }
 
+.side-controls-right {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 30;
+}
+
 .side-btn {
     width: 50px;
     height: 50px;
@@ -157,6 +167,34 @@ body {
 .bonus-btn {
     background-color: #e67e22;
     box-shadow: 0 4px 0 #d35400;
+}
+
+.journal-btn {
+    background-color: #f1c40f;
+    box-shadow: 0 4px 0 #f39c12;
+    color: #2c3e50;
+}
+
+.reset-btn {
+    background-color: #e74c3c;
+    box-shadow: 0 4px 0 #c0392b;
+    color: white;
+}
+
+.danger-btn {
+    background-color: #e74c3c !important;
+    box-shadow: 0 4px 0 #c0392b !important;
+    color: white !important;
+    transition: all 0.1s ease;
+}
+
+.danger-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #c0392b !important;
+}
+
+.danger-btn:hover {
+    filter: brightness(1.1);
 }
 
 .bonus-btn.hidden {
@@ -385,10 +423,14 @@ body {
     padding: 40px;
     border-radius: 10px;
     text-align: center;
+    max-width: 80%;
+    width: auto;
 }
 
 .modal-content h2 {
     margin-bottom: 20px;
+    width: 100%;
+    text-align: center;
 }
 
 .modal-content button {
@@ -399,4 +441,128 @@ body {
     border: none;
     border-radius: 5px;
     cursor: pointer;
+}
+
+/* Score Summary in Win Screen */
+.score-summary {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    text-align: left;
+}
+
+.score-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    color: #666;
+}
+
+.score-total-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 2px solid #dee2e6;
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #2c3e50;
+}
+
+.score-grand-total {
+    margin-top: 15px;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #f39c12;
+    text-align: center;
+    border: 2px dashed #f1c40f;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+/* Journal Modal Specifics */
+.journal-content {
+    max-width: 80%;
+    width: 500px;
+    max-height: 70vh; /* Ограничиваем высоту окна до 70% от высоты экрана */
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.modal-header {
+    flex-shrink: 0; /* Шапка не должна сжиматься */
+    display: flex;
+    justify-content: center; /* Центрируем заголовок */
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f0f2f5;
+    padding-bottom: 10px;
+    position: relative; /* Для позиционирования кнопки закрытия */
+}
+
+.modal-header h2 {
+    margin-bottom: 0;
+}
+
+.close-btn {
+    background: none !important;
+    border: none !important;
+    color: #333 !important;
+    font-size: 32px !important;
+    padding: 0 !important;
+    cursor: pointer;
+    line-height: 1;
+    position: absolute;
+    right: 0;
+}
+
+.journal-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    overflow-y: auto; /* Включаем вертикальную прокрутку */
+    padding: 10px 5px;
+    justify-content: center;
+    flex-grow: 1; /* Список занимает все свободное место */
+}
+
+/* Стилизация скроллбара для красоты */
+.journal-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.journal-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.journal-list::-webkit-scrollbar-thumb {
+    background: #f1c40f;
+    border-radius: 10px;
+}
+
+.journal-list::-webkit-scrollbar-thumb:hover {
+    background: #f39c12;
+}
+
+.journal-item {
+    background-color: #f1c40f;
+    color: #2c3e50;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 1em;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.journal-empty-msg {
+    color: #7f8c8d;
+    font-style: italic;
+    margin: 20px 0;
+}
+
+.journal-empty-msg.hidden {
+    display: none;
 }

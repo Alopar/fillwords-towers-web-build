@@ -23,6 +23,10 @@ const LETTER_SORT = {
 let currentLevelIndex = 0;
 let LEVELS_DATA = [];
 let FULL_DICTIONARY = new Set();
+let globalJournal = [];
+let totalScore = 0;
+
+// State
 let gameState = {
     columns: [], // Array of arrays (stacks)
     targetWords: [], // Words to find
@@ -34,7 +38,13 @@ let gameState = {
     isColored: false, // Включена ли раскраска на текущем уровне
     isGameActive: false,
     isProcessing: false,
-    checkWordTimeout: null
+    checkWordTimeout: null,
+    currentLevelScore: 0,
+    scoreDetails: {
+        words: 0,
+        hidden: 0,
+        bonus: 0
+    }
 };
 
 // Initial setup
@@ -59,7 +69,10 @@ async function initGame() {
                 .filter(word => word.length > 0)
         );
 
+        loadScore();
+        loadLevelProgress();
         loadLevel(currentLevelIndex);
+        loadJournal();
     } catch (error) {
         console.error("Failed to load game data:", error);
         alert("Ошибка загрузки данных игры. Пожалуйста, убедитесь, что вы запускаете игру через локальный сервер (например, VS Code Live Server).");
@@ -69,7 +82,88 @@ async function initGame() {
     document.getElementById('hint-btn').addEventListener('click', useHint);
     document.getElementById('bonus-color-btn').addEventListener('click', activateBonusColor);
     document.getElementById('next-level-btn').addEventListener('click', nextLevel);
+    document.getElementById('journal-btn').addEventListener('click', openJournal);
+    document.getElementById('close-journal-btn').addEventListener('click', closeJournal);
+    document.getElementById('reset-progress-btn').addEventListener('click', openResetModal);
+    document.getElementById('close-reset-btn').addEventListener('click', closeResetModal);
+    document.getElementById('confirm-reset-btn').addEventListener('click', resetProgress);
     document.getElementById('word-panel').addEventListener('click', handleInputPanelClick);
+}
+
+function loadJournal() {
+    const savedJournal = localStorage.getItem('hiddenWordsJournal');
+    if (savedJournal) {
+        globalJournal = JSON.parse(savedJournal);
+    }
+}
+
+function saveJournal() {
+    localStorage.setItem('hiddenWordsJournal', JSON.stringify(globalJournal));
+}
+
+function loadScore() {
+    const savedScore = localStorage.getItem('totalScore');
+    if (savedScore) {
+        totalScore = parseInt(savedScore, 10) || 0;
+    }
+}
+
+function saveScore() {
+    localStorage.setItem('totalScore', totalScore.toString());
+}
+
+function loadLevelProgress() {
+    const savedLevel = localStorage.getItem('currentLevelIndex');
+    if (savedLevel) {
+        currentLevelIndex = parseInt(savedLevel, 10) || 0;
+    }
+}
+
+function saveLevel() {
+    localStorage.setItem('currentLevelIndex', currentLevelIndex.toString());
+}
+
+function openJournal() {
+    renderJournal();
+    document.getElementById('journal-modal').classList.remove('hidden');
+}
+
+function closeJournal() {
+    document.getElementById('journal-modal').classList.add('hidden');
+}
+
+function openResetModal() {
+    document.getElementById('reset-modal').classList.remove('hidden');
+}
+
+function closeResetModal() {
+    document.getElementById('reset-modal').classList.add('hidden');
+}
+
+function resetProgress() {
+    localStorage.clear();
+    location.reload();
+}
+
+function renderJournal() {
+    const list = document.getElementById('journal-list');
+    const emptyMsg = document.getElementById('journal-empty-msg');
+    
+    list.innerHTML = '';
+    
+    if (globalJournal.length === 0) {
+        emptyMsg.classList.remove('hidden');
+    } else {
+        emptyMsg.classList.add('hidden');
+        // Сортируем слова в алфавитном порядке для удобства
+        const sortedWords = [...globalJournal].sort((a, b) => a.localeCompare(b));
+        sortedWords.forEach(word => {
+            const el = document.createElement('div');
+            el.className = 'journal-item';
+            el.textContent = word;
+            list.appendChild(el);
+        });
+    }
 }
 
 function restartLevel() {
@@ -225,6 +319,7 @@ function nextLevel() {
         alert("Поздравляем! Вы прошли все уровни!");
         currentLevelIndex = 0;
     }
+    saveLevel();
     loadLevel(currentLevelIndex);
 }
 
@@ -286,6 +381,12 @@ function loadLevel(levelIndex) {
     gameState.selectedTiles = [];
     gameState.columns = Array.from({ length: levelConfig.cols }, () => []);
     gameState.isColored = levelConfig.difficulty?.colored ?? true;
+    gameState.currentLevelScore = 0;
+    gameState.scoreDetails = {
+        words: 0,
+        hidden: 0,
+        bonus: 0
+    };
     
     // Инициализация цветов для уровня
     gameState.levelColors = [...WORD_COLORS];
@@ -374,23 +475,6 @@ function updateTargetWordsUI() {
         } else {
             bonusBtn.classList.add('hidden');
         }
-    }
-
-    // Update Hidden Words UI
-    const hiddenContainer = document.getElementById('hidden-words-container');
-    const hiddenList = document.getElementById('hidden-words-list');
-    
-    if (gameState.hiddenWords.length > 0) {
-        hiddenContainer.classList.remove('hidden');
-        hiddenList.innerHTML = '';
-        gameState.hiddenWords.forEach(word => {
-            const el = document.createElement('div');
-            el.className = 'hidden-word';
-            el.textContent = word;
-            hiddenList.appendChild(el);
-        });
-    } else {
-        hiddenContainer.classList.add('hidden');
     }
 }
 
@@ -545,22 +629,32 @@ function updateSelectionUI() {
     const isTarget = gameState.targetWords.includes(currentWord);
     const isFoundTarget = gameState.foundWords.includes(currentWord);
     const isInDictionary = FULL_DICTIONARY.has(currentWord);
-    const isFoundHidden = gameState.hiddenWords.includes(currentWord);
+    const isFoundHidden = globalJournal.includes(currentWord);
     
-    if (isFoundTarget || isFoundHidden) {
-        // 2.5 Если введенное слово уже найдено
-        panel.classList.add('already-found');
-        assembly.classList.add('already-found');
-    } else if (isTarget) {
-        // 2.3 Если введенное слово загадано, но еще не найдено
+    // КАСКАДНАЯ ПРОВЕРКА:
+    // 1. Если это загаданное слово и оно еще не найдено на ТЕКУЩЕМ уровне - оно всегда CORRECT
+    if (isTarget && !isFoundTarget) {
         panel.classList.add('correct', 'clickable');
         assembly.classList.add('correct');
-    } else if (isInDictionary) {
-        // 2.4 Если введенное слово не загадано, но есть в словаре
-        panel.classList.add('gold', 'clickable');
-        assembly.classList.add('gold');
-    } else {
-        // 2.2 Если буквы введены, но слово не найдено
+    } 
+    // 2. Если это загаданное слово и оно УЖЕ найдено на уровне
+    else if (isFoundTarget) {
+        panel.classList.add('already-found');
+        assembly.classList.add('already-found');
+    }
+    // 3. Если это НЕ загаданное слово, но оно есть в словаре
+    else if (isInDictionary) {
+        // Проверяем, было ли оно уже найдено как скрытое (в журнале)
+        if (isFoundHidden) {
+            panel.classList.add('already-found');
+            assembly.classList.add('already-found');
+        } else {
+            panel.classList.add('gold', 'clickable');
+            assembly.classList.add('gold');
+        }
+    } 
+    // 4. Если слова нет нигде
+    else {
         panel.classList.add('invalid', 'clickable');
         assembly.classList.add('invalid');
     }
@@ -575,16 +669,24 @@ function handleInputPanelClick() {
     const isTarget = gameState.targetWords.includes(currentWord);
     const isFoundTarget = gameState.foundWords.includes(currentWord);
     const isInDictionary = FULL_DICTIONARY.has(currentWord);
-    const isFoundHidden = gameState.hiddenWords.includes(currentWord);
+    const isFoundHidden = globalJournal.includes(currentWord);
     
-    if (isFoundTarget || isFoundHidden) {
-        // Функции при нажатии нет
-        return;
-    } else if (isTarget || isInDictionary) {
-        // Подтверждение
+    // КАСКАДНАЯ ПРОВЕРКА ПРИ КЛИКЕ:
+    // 1. Если это загаданное слово и оно еще не найдено на уровне
+    if (isTarget && !isFoundTarget) {
         checkWordMatch();
-    } else {
-        // СБРОС
+    } 
+    // 2. Если это скрытое слово (есть в словаре, но не загадано) и его нет в журнале
+    else if (!isTarget && isInDictionary && !isFoundHidden) {
+        checkWordMatch();
+    }
+    // 3. Если слово уже найдено (загаданное или скрытое)
+    else if (isFoundTarget || (isInDictionary && isFoundHidden)) {
+        // Ничего не делаем
+        return;
+    }
+    // 4. Если слова нет в словаре - сброс
+    else {
         resetSelection();
     }
 }
@@ -617,10 +719,24 @@ function checkWordMatch() {
     const panel = document.getElementById('word-panel');
     const infoMsg = document.getElementById('info-message');
     
-    // 1. Проверка основных слов
-    if (gameState.targetWords.includes(currentWord) && !gameState.foundWords.includes(currentWord)) {
+    const isTarget = gameState.targetWords.includes(currentWord);
+    const isFoundTarget = gameState.foundWords.includes(currentWord);
+    const isInDictionary = FULL_DICTIONARY.has(currentWord);
+    const isFoundHidden = globalJournal.includes(currentWord);
+
+    // 1. Проверка основных слов (всегда приоритет)
+    if (isTarget && !isFoundTarget) {
         gameState.isProcessing = true;
         gameState.foundWords.push(currentWord);
+        
+        // Начисление очков за обычное слово (10 за букву)
+        const points = currentWord.length * 10;
+        gameState.currentLevelScore += points;
+        gameState.scoreDetails.words += points;
+        
+        // Показываем инфо-надпись с очками
+        infoMsg.textContent = `+${points} очков!`;
+        infoMsg.classList.remove('hidden');
         
         // Если слово было открыто подсказкой, удаляем его из revealedWords
         const revealedIndex = gameState.revealedWords.indexOf(currentWord);
@@ -634,6 +750,7 @@ function checkWordMatch() {
         });
 
         setTimeout(() => {
+            infoMsg.classList.add('hidden');
             removeSelectedTiles();
             
             gameState.selectedTiles = [];
@@ -645,17 +762,25 @@ function checkWordMatch() {
             
             if (gameState.foundWords.length === gameState.targetWords.length) {
                 setTimeout(() => {
-                    document.getElementById('win-screen').classList.remove('hidden');
+                    showWinScreen();
                 }, 500);
             }
         }, 800);
     } 
-    // 2. Проверка скрытых слов
-    else if (FULL_DICTIONARY.has(currentWord) && !gameState.targetWords.includes(currentWord) && !gameState.hiddenWords.includes(currentWord)) {
+    // 2. Проверка скрытых слов (только если НЕ загадано или УЖЕ найдено как загаданное)
+    else if (isInDictionary && !isFoundHidden && (!isTarget || isFoundTarget)) {
         gameState.isProcessing = true;
         gameState.hiddenWords.push(currentWord);
+        globalJournal.push(currentWord);
+        saveJournal();
+        
+        // Начисление очков за скрытое слово (15 за букву)
+        const points = currentWord.length * 15;
+        gameState.currentLevelScore += points;
+        gameState.scoreDetails.hidden += points;
         
         // Показываем инфо-надпись
+        infoMsg.textContent = `Скрытое слово! +${points}`;
         infoMsg.classList.remove('hidden');
         
         gameState.selectedTiles.forEach(tile => {
@@ -688,4 +813,25 @@ function removeSelectedTiles() {
     });
     
     renderBoard();
+}
+
+function showWinScreen() {
+    const levelBonus = 100 + (5 * (currentLevelIndex + 1));
+    gameState.scoreDetails.bonus = levelBonus;
+    gameState.currentLevelScore += levelBonus;
+    
+    // Обновляем общий счет
+    totalScore += gameState.currentLevelScore;
+    saveScore();
+    
+    // Заполняем UI модалки
+    document.getElementById('score-words').textContent = `+${gameState.scoreDetails.words}`;
+    document.getElementById('score-hidden').textContent = `+${gameState.scoreDetails.hidden}`;
+    document.getElementById('score-level-bonus').textContent = `+${gameState.scoreDetails.bonus}`;
+    document.getElementById('score-level-total').textContent = gameState.currentLevelScore;
+    
+    const grandTotalDisplay = document.getElementById('score-total-display');
+    if (grandTotalDisplay) grandTotalDisplay.textContent = totalScore;
+    
+    document.getElementById('win-screen').classList.remove('hidden');
 }
