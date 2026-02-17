@@ -40,24 +40,42 @@
     </div>
     
     <div id="win-screen" class="modal hidden">
-        <div class="modal-content">
-            <h2>Уровень пройден!</h2>
-            <div class="score-summary">
-                <div class="score-row"><span>Слова:</span> <span id="score-words">+0</span></div>
-                <div class="score-row"><span>Скрытые слова:</span> <span id="score-hidden">+0</span></div>
-                <div class="score-row"><span>Бонус уровня:</span> <span id="score-level-bonus">+0</span></div>
-                <div class="score-total-row"><span>Всего за уровень:</span> <span id="score-level-total">0</span></div>
-                <div class="score-grand-total"><span>Общий счет:</span> <span id="score-total-display">0</span></div>
+        <div class="modal-content win-content">
+            <div class="win-header">
+                <div class="win-icon">🏆</div>
+                <h2>Уровень пройден!</h2>
             </div>
-            <button id="next-level-btn">Следующий уровень</button>
+            <div class="score-summary">
+                <div class="score-row">
+                    <span class="score-label">Слова</span>
+                    <span class="score-value" id="score-words">+0</span>
+                </div>
+                <div class="score-row">
+                    <span class="score-label">Скрытые слова</span>
+                    <span class="score-value" id="score-hidden">+0</span>
+                </div>
+                <div class="score-row">
+                    <span class="score-label">Бонус уровня</span>
+                    <span class="score-value" id="score-level-bonus">+0</span>
+                </div>
+                <div class="score-total-row">
+                    <span>Всего за уровень</span>
+                    <span id="score-level-total">0</span>
+                </div>
+                <div class="score-grand-total">
+                    <div class="grand-total-label">Общий счет</div>
+                    <div class="grand-total-value" id="score-total-display">0</div>
+                </div>
+            </div>
+            <button id="next-level-btn" class="next-btn">Следующий уровень</button>
         </div>
     </div>
 
     <div id="journal-modal" class="modal hidden">
         <div class="modal-content journal-content">
+            <button id="close-journal-btn" class="close-btn">&times;</button>
             <div class="modal-header">
                 <h2>Журнал найденных слов</h2>
-                <button id="close-journal-btn" class="close-btn">&times;</button>
             </div>
             <div id="journal-list" class="journal-list">
                 <!-- Список всех найденных скрытых слов -->
@@ -70,14 +88,27 @@
 
     <div id="reset-modal" class="modal hidden">
         <div class="modal-content">
+            <button id="close-reset-btn" class="close-btn">&times;</button>
             <div class="modal-header">
                 <h2>Сброс прогресса</h2>
-                <button id="close-reset-btn" class="close-btn">&times;</button>
             </div>
             <p>Весь ваш прогресс (уровни, очки и журнал слов) будет безвозвратно удален. Вы уверены?</p>
             <div style="margin-top: 25px;">
                 <button id="confirm-reset-btn" class="confirm-btn danger-btn">Да, сбросить всё</button>
             </div>
+        </div>
+    </div>
+
+    <div id="instruction-modal" class="modal hidden">
+        <div class="modal-content instruction-content">
+            <button id="close-instruction-btn" class="close-btn">&times;</button>
+            <div class="modal-header">
+                <h2>Подсказки</h2>
+            </div>
+            <div class="instruction-body">
+                <p id="instruction-text"></p>
+            </div>
+            <button id="start-level-btn" class="next-btn">Понятно</button>
         </div>
     </div>
 

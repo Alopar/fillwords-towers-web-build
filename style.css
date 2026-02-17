@@ -58,6 +58,10 @@ body {
     font-weight: 600;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: all 0.2s ease;
+    font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace;
+    letter-spacing: 2px;
+    display: inline-flex;
+    justify-content: center;
 }
 
 .target-word.found {
@@ -183,18 +187,21 @@ body {
 
 .danger-btn {
     background-color: #e74c3c !important;
-    box-shadow: 0 4px 0 #c0392b !important;
+    box-shadow: 0 6px 0 #c0392b !important;
     color: white !important;
+    border: none !important;
     transition: all 0.1s ease;
 }
 
 .danger-btn:active {
-    transform: translateY(2px);
+    transform: translateY(4px);
     box-shadow: 0 2px 0 #c0392b !important;
 }
 
 .danger-btn:hover {
     filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 0 #c0392b !important;
 }
 
 .bonus-btn.hidden {
@@ -407,11 +414,12 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.8);
+    background: rgba(44, 62, 80, 0.9); /* Более глубокий синий фон */
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 100;
+    backdrop-filter: blur(5px); /* Размытие фона */
 }
 
 .modal.hidden {
@@ -421,64 +429,136 @@ body {
 .modal-content {
     background: white;
     padding: 40px;
-    border-radius: 10px;
+    border-radius: 24px; /* Более скругленные углы */
     text-align: center;
-    max-width: 80%;
-    width: auto;
+    max-width: 90%;
+    width: 360px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+.win-content {
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.win-header {
+    margin-bottom: 25px;
+}
+
+.win-icon {
+    font-size: 60px;
+    margin-bottom: 10px;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+    40% {transform: translateY(-20px);}
+    60% {transform: translateY(-10px);}
 }
 
 .modal-content h2 {
     margin-bottom: 20px;
     width: 100%;
     text-align: center;
-}
-
-.modal-content button {
-    padding: 10px 20px;
-    font-size: 1.2em;
-    background-color: #2ecc71;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+    color: #2c3e50;
+    font-size: 1.8em;
 }
 
 /* Score Summary in Win Screen */
 .score-summary {
-    margin: 20px 0;
-    padding: 15px;
+    margin: 25px 0;
+    padding: 20px;
     background-color: #f8f9fa;
-    border-radius: 10px;
+    border-radius: 16px;
     text-align: left;
+    border: 1px solid #edf2f7;
 }
 
 .score-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 8px;
-    color: #666;
+    margin-bottom: 12px;
+    color: #718096;
+    font-size: 1.05em;
+}
+
+.score-label {
+    font-weight: 500;
+}
+
+.score-value {
+    color: #2d3748;
+    font-weight: 700;
 }
 
 .score-total-row {
     display: flex;
     justify-content: space-between;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 2px solid #dee2e6;
-    font-weight: bold;
-    font-size: 1.1em;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px solid #edf2f7;
+    font-weight: 800;
+    font-size: 1.2em;
     color: #2c3e50;
 }
 
 .score-grand-total {
-    margin-top: 15px;
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #f39c12;
-    text-align: center;
-    border: 2px dashed #f1c40f;
-    padding: 10px;
-    border-radius: 8px;
+    margin-top: 25px;
+    background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+    padding: 15px;
+    border-radius: 12px;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(246, 211, 101, 0.4);
+    text-align: center; /* Центрируем текст внутри блока */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Центрируем элементы по горизонтали во flex-контейнере */
+}
+
+.grand-total-label {
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.9;
+    margin-bottom: 5px;
+}
+
+.grand-total-value {
+    font-size: 2em;
+    font-weight: 900;
+}
+
+.next-btn {
+    width: 100%;
+    padding: 16px 32px !important;
+    font-size: 1.2em !important;
+    font-weight: 700 !important;
+    background-color: #2ecc71 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 12px !important;
+    cursor: pointer !important;
+    box-shadow: 0 6px 0 #27ae60 !important;
+    transition: all 0.1s ease !important;
+    margin-top: 10px;
+}
+
+.next-btn:hover {
+    filter: brightness(1.05);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 0 #27ae60 !important;
+}
+
+.next-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #27ae60 !important;
 }
 
 /* Journal Modal Specifics */
@@ -492,30 +572,46 @@ body {
 }
 
 .modal-header {
-    flex-shrink: 0; /* Шапка не должна сжиматься */
+    flex-shrink: 0;
     display: flex;
-    justify-content: center; /* Центрируем заголовок */
+    justify-content: center;
     align-items: center;
     margin-bottom: 20px;
     border-bottom: 2px solid #f0f2f5;
     padding-bottom: 10px;
-    position: relative; /* Для позиционирования кнопки закрытия */
-}
-
-.modal-header h2 {
-    margin-bottom: 0;
+    position: relative;
 }
 
 .close-btn {
-    background: none !important;
+    background-color: #e74c3c !important;
+    color: white !important;
     border: none !important;
-    color: #333 !important;
-    font-size: 32px !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    font-size: 24px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    position: absolute !important;
+    top: 15px !important;
+    right: 15px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+    transition: all 0.2s ease !important;
+    z-index: 100;
+    line-height: 1 !important;
     padding: 0 !important;
-    cursor: pointer;
-    line-height: 1;
-    position: absolute;
-    right: 0;
+    padding-bottom: 2px !important; /* Центрирование крестика визуально */
+}
+
+.close-btn:hover {
+    background-color: #c0392b !important;
+    transform: scale(1.1);
+}
+
+.close-btn:active {
+    transform: scale(0.9);
 }
 
 .journal-list {
@@ -563,6 +659,41 @@ body {
     margin: 20px 0;
 }
 
-.journal-empty-msg.hidden {
-    display: none;
+.modal-content p {
+    margin: 15px 0;
+    color: #4a5568;
+    line-height: 1.5;
+}
+
+.confirm-btn {
+    width: 100%;
+    padding: 14px 28px !important;
+    font-size: 1.1em !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.confirm-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+.confirm-btn:active {
+    transform: translateY(1px);
+}
+
+/* Instruction Modal Specifics */
+.instruction-content {
+    max-width: 90%;
+    width: 400px;
+}
+
+.instruction-body {
+    margin: 20px 0;
+    font-size: 1.1em;
+    line-height: 1.6;
+    color: #2c3e50;
+    text-align: left;
 }

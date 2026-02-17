@@ -22,9 +22,11 @@ const LETTER_SORT = {
 // State
 let currentLevelIndex = 0;
 let LEVELS_DATA = [];
+let INSTRUCTIONS_DATA = {};
 let FULL_DICTIONARY = new Set();
 let globalJournal = [];
 let totalScore = 0;
+let viewedInstructions = new Set();
 
 // State
 let gameState = {
@@ -55,12 +57,14 @@ document.addEventListener('DOMContentLoaded', () => {
 async function initGame() {
     console.log("Initializing game...");
     try {
-        const [levelsRes, dictRes] = await Promise.all([
+        const [levelsRes, instructionsRes, dictRes] = await Promise.all([
             fetch('levels.json'),
+            fetch('instructions.json'),
             fetch('russian_dictionary.txt')
         ]);
         
         LEVELS_DATA = await levelsRes.json();
+        INSTRUCTIONS_DATA = await instructionsRes.json();
         
         const dictText = await dictRes.text();
         FULL_DICTIONARY = new Set(
@@ -71,6 +75,7 @@ async function initGame() {
 
         loadScore();
         loadLevelProgress();
+        loadViewedInstructions();
         loadLevel(currentLevelIndex);
         loadJournal();
     } catch (error) {
@@ -88,6 +93,8 @@ async function initGame() {
     document.getElementById('close-reset-btn').addEventListener('click', closeResetModal);
     document.getElementById('confirm-reset-btn').addEventListener('click', resetProgress);
     document.getElementById('word-panel').addEventListener('click', handleInputPanelClick);
+    document.getElementById('close-instruction-btn').addEventListener('click', closeInstructionModal);
+    document.getElementById('start-level-btn').addEventListener('click', closeInstructionModal);
 }
 
 function loadJournal() {
@@ -121,6 +128,28 @@ function loadLevelProgress() {
 
 function saveLevel() {
     localStorage.setItem('currentLevelIndex', currentLevelIndex.toString());
+}
+
+function loadViewedInstructions() {
+    const saved = localStorage.getItem('viewedInstructions');
+    if (saved) {
+        viewedInstructions = new Set(JSON.parse(saved));
+    }
+}
+
+function saveViewedInstructions() {
+    localStorage.setItem('viewedInstructions', JSON.stringify([...viewedInstructions]));
+}
+
+function openInstructionModal(text, levelId) {
+    document.getElementById('instruction-text').textContent = text;
+    document.getElementById('instruction-modal').classList.remove('hidden');
+    viewedInstructions.add(levelId.toString());
+    saveViewedInstructions();
+}
+
+function closeInstructionModal() {
+    document.getElementById('instruction-modal').classList.add('hidden');
 }
 
 function openJournal() {
@@ -406,6 +435,12 @@ function loadLevel(levelIndex) {
     
     // Render
     renderBoard();
+
+    // Check for instructions
+    const instruction = INSTRUCTIONS_DATA[levelConfig.id.toString()];
+    if (instruction && !viewedInstructions.has(levelConfig.id.toString())) {
+        openInstructionModal(instruction, levelConfig.id);
+    }
 }
 
 function updateTargetWordsUI() {
@@ -434,6 +469,9 @@ function updateTargetWordsUI() {
         if (isFound || isRevealed) {
             el.textContent = word;
         } else {
+            // Используем специальный символ или добавляем пробелы, если нужно, 
+            // но с моноширинным шрифтом в CSS это уже должно работать.
+            // Чтобы усилить эффект "зазора", можно добавить неразрывные пробелы.
             el.textContent = word.replace(/./g, '*');
         }
         
@@ -828,10 +866,51 @@ function showWinScreen() {
     document.getElementById('score-words').textContent = `+${gameState.scoreDetails.words}`;
     document.getElementById('score-hidden').textContent = `+${gameState.scoreDetails.hidden}`;
     document.getElementById('score-level-bonus').textContent = `+${gameState.scoreDetails.bonus}`;
-    document.getElementById('score-level-total').textContent = gameState.currentLevelScore;
     
+    // Анимированный счетчик для текущего счета уровня
+    animateValue('score-level-total', 0, gameState.currentLevelScore, 1000);
+    
+    // Общий счет обновляем сразу или тоже с анимацией
     const grandTotalDisplay = document.getElementById('score-total-display');
-    if (grandTotalDisplay) grandTotalDisplay.textContent = totalScore;
+    if (grandTotalDisplay) {
+        animateValue('score-total-display', totalScore - gameState.currentLevelScore, totalScore, 1500);
+    }
     
     document.getElementById('win-screen').classList.remove('hidden');
+    
+    // Эффект конфетти (если бы была библиотека, но сделаем просто всплеск иконки)
+    const winIcon = document.querySelector('.win-icon');
+    if (winIcon) {
+        winIcon.style.animation = 'none';
+        setTimeout(() => {
+            winIcon.style.animation = 'bounce 2s infinite';
+        }, 10);
+    }
+}
+
+function animateValue(id, start, end, duration) {
+    const obj = document.getElementById(id);
+    if (!obj) return;
+    
+    const range = end - start;
+    const minTimer = 50;
+    let stepTime = Math.abs(Math.floor(duration / range));
+    stepTime = Math.max(stepTime, minTimer);
+    
+    const startTime = new Date().getTime();
+    const endTime = startTime + duration;
+    let timer;
+    
+    function run() {
+        const now = new Date().getTime();
+        const remaining = Math.max((endTime - now) / duration, 0);
+        const value = Math.round(end - (remaining * range));
+        obj.innerHTML = value;
+        if (value == end) {
+            clearInterval(timer);
+        }
+    }
+    
+    timer = setInterval(run, stepTime);
+    run();
 }
