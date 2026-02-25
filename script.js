@@ -22,11 +22,17 @@ const LETTER_SORT = {
 // State
 let currentLevelIndex = 0;
 let LEVELS_DATA = [];
+let STAGES_META = []; // [{ stageId, stageIndex, indexInStage, totalInStage }] per levelIndex
 let INSTRUCTIONS_DATA = {};
 let FULL_DICTIONARY = new Set();
 let globalJournal = [];
 let totalScore = 0;
 let viewedInstructions = new Set();
+let hintsInstructionsList = [];
+let hintsCurrentIndex = 0;
+let instructionParts = [];
+let instructionPartIndex = 0;
+let instructionLevelId = null;
 
 // State
 let gameState = {
@@ -42,10 +48,11 @@ let gameState = {
     isProcessing: false,
     checkWordTimeout: null,
     currentLevelScore: 0,
-    scoreDetails: {
+        scoreDetails: {
         words: 0,
         hidden: 0,
-        bonus: 0
+        bonus: 0,
+        difficultyBonus: 0
     }
 };
 
@@ -63,7 +70,26 @@ async function initGame() {
             fetch('russian_dictionary.txt')
         ]);
         
-        LEVELS_DATA = await levelsRes.json();
+        const levelsRaw = await levelsRes.json();
+        if (levelsRaw.stages) {
+            LEVELS_DATA = [];
+            STAGES_META = [];
+            levelsRaw.stages.forEach((stage, stageIdx) => {
+                stage.levels.forEach((level, idxInStage) => {
+                    LEVELS_DATA.push(level);
+                    STAGES_META.push({
+                        stageId: stage.id,
+                        stageIndex: stageIdx,
+                        indexInStage: idxInStage,
+                        totalInStage: stage.levels.length
+                    });
+                });
+            });
+        } else {
+            LEVELS_DATA = Array.isArray(levelsRaw) ? levelsRaw : [];
+            const total = LEVELS_DATA.length;
+            STAGES_META = LEVELS_DATA.map((_, i) => ({ stageId: 1, stageIndex: 0, indexInStage: i, totalInStage: total }));
+        }
         INSTRUCTIONS_DATA = await instructionsRes.json();
         
         const dictText = await dictRes.text();
@@ -94,7 +120,10 @@ async function initGame() {
     document.getElementById('confirm-reset-btn').addEventListener('click', resetProgress);
     document.getElementById('word-panel').addEventListener('click', handleInputPanelClick);
     document.getElementById('close-instruction-btn').addEventListener('click', closeInstructionModal);
-    document.getElementById('start-level-btn').addEventListener('click', closeInstructionModal);
+    document.getElementById('start-level-btn').addEventListener('click', handleInstructionNext);
+    document.getElementById('hints-btn').addEventListener('click', openHintsModal);
+    document.getElementById('close-hints-btn').addEventListener('click', closeHintsModal);
+    document.getElementById('hints-next-btn').addEventListener('click', handleHintsNext);
 }
 
 function loadJournal() {
@@ -130,6 +159,34 @@ function saveLevel() {
     localStorage.setItem('currentLevelIndex', currentLevelIndex.toString());
 }
 
+function getCurrentStage() {
+    return STAGES_META[currentLevelIndex] || null;
+}
+
+function getStageProgress() {
+    const meta = STAGES_META[currentLevelIndex];
+    if (!meta) return { current: 1, total: 1 };
+    return { current: meta.indexInStage + 1, total: meta.totalInStage };
+}
+
+function getLevelsLeftInStage() {
+    const meta = STAGES_META[currentLevelIndex];
+    if (!meta) return 0;
+    return meta.totalInStage - meta.indexInStage - 1;
+}
+
+function formatStars(stars) {
+    const s = Math.min(3, Math.max(1, stars || 1));
+    return '★'.repeat(s) + '☆'.repeat(3 - s);
+}
+
+function renderStarsHTML(stars) {
+    const s = Math.min(3, Math.max(1, stars || 1));
+    const filled = '<span class="star-filled">★</span>'.repeat(s);
+    const empty = '<span class="star-empty">☆</span>'.repeat(3 - s);
+    return filled + empty;
+}
+
 function loadViewedInstructions() {
     const saved = localStorage.getItem('viewedInstructions');
     if (saved) {
@@ -141,11 +198,36 @@ function saveViewedInstructions() {
     localStorage.setItem('viewedInstructions', JSON.stringify([...viewedInstructions]));
 }
 
-function openInstructionModal(text, levelId) {
-    document.getElementById('instruction-text').textContent = text;
+function normalizeInstructionParts(instruction) {
+    if (Array.isArray(instruction)) return instruction;
+    if (typeof instruction === 'string') return [instruction];
+    return [];
+}
+
+function openInstructionModal(instruction, levelId) {
+    instructionParts = normalizeInstructionParts(instruction);
+    instructionPartIndex = 0;
+    instructionLevelId = levelId;
+
+    if (instructionParts.length === 0) return;
+
+    document.getElementById('instruction-text').textContent = instructionParts[0];
+    const btn = document.getElementById('start-level-btn');
+    btn.textContent = instructionParts.length > 1 ? 'Далее' : 'Понятно';
     document.getElementById('instruction-modal').classList.remove('hidden');
     viewedInstructions.add(levelId.toString());
     saveViewedInstructions();
+}
+
+function handleInstructionNext() {
+    if (instructionPartIndex < instructionParts.length - 1) {
+        instructionPartIndex++;
+        document.getElementById('instruction-text').textContent = instructionParts[instructionPartIndex];
+        const btn = document.getElementById('start-level-btn');
+        btn.textContent = instructionPartIndex === instructionParts.length - 1 ? 'Понятно' : 'Далее';
+    } else {
+        closeInstructionModal();
+    }
 }
 
 function closeInstructionModal() {
@@ -159,6 +241,51 @@ function openJournal() {
 
 function closeJournal() {
     document.getElementById('journal-modal').classList.add('hidden');
+}
+
+function openHintsModal() {
+    hintsInstructionsList = [];
+    for (let i = 0; i <= currentLevelIndex; i++) {
+        const levelConfig = LEVELS_DATA[i];
+        if (!levelConfig) continue;
+        const instruction = INSTRUCTIONS_DATA[levelConfig.id.toString()];
+        const parts = normalizeInstructionParts(instruction);
+        hintsInstructionsList.push(...parts);
+    }
+
+    const textEl = document.getElementById('hints-instruction-text');
+    const nextBtn = document.getElementById('hints-next-btn');
+
+    if (hintsInstructionsList.length === 0) {
+        textEl.textContent = 'Нет подсказок для этого уровня.';
+        nextBtn.textContent = 'Понятно';
+        hintsCurrentIndex = -1;
+    } else {
+        hintsCurrentIndex = 0;
+        textEl.textContent = hintsInstructionsList[0];
+        nextBtn.textContent = hintsInstructionsList.length > 1 ? 'Далее' : 'Понятно';
+    }
+
+    document.getElementById('hints-modal').classList.remove('hidden');
+}
+
+function closeHintsModal() {
+    document.getElementById('hints-modal').classList.add('hidden');
+}
+
+function handleHintsNext() {
+    if (hintsCurrentIndex < 0) {
+        closeHintsModal();
+        return;
+    }
+    if (hintsCurrentIndex < hintsInstructionsList.length - 1) {
+        hintsCurrentIndex++;
+        document.getElementById('hints-instruction-text').textContent = hintsInstructionsList[hintsCurrentIndex];
+        const nextBtn = document.getElementById('hints-next-btn');
+        nextBtn.textContent = hintsCurrentIndex === hintsInstructionsList.length - 1 ? 'Понятно' : 'Далее';
+    } else {
+        closeHintsModal();
+    }
 }
 
 function openResetModal() {
@@ -396,6 +523,15 @@ function loadLevel(levelIndex) {
 
     // UI Updates
     document.getElementById('level-display').textContent = levelConfig.id;
+    const starsEl = document.getElementById('stars-display');
+    
+    if (starsEl) {
+        starsEl.innerHTML = renderStarsHTML(levelConfig.difficulty?.stars);
+    }
+    
+    const prog = getStageProgress();
+    renderStageProgressBar(prog);
+
     document.getElementById('game-board').innerHTML = '';
     document.getElementById('target-words-list').innerHTML = '';
     
@@ -414,7 +550,8 @@ function loadLevel(levelIndex) {
     gameState.scoreDetails = {
         words: 0,
         hidden: 0,
-        bonus: 0
+        bonus: 0,
+        difficultyBonus: 0
     };
     
     // Инициализация цветов для уровня
@@ -441,6 +578,32 @@ function loadLevel(levelIndex) {
     if (instruction && !viewedInstructions.has(levelConfig.id.toString())) {
         openInstructionModal(instruction, levelConfig.id);
     }
+}
+
+function renderStageProgressBar(prog) {
+    const container = document.getElementById('stage-progress-bar');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    const meta = STAGES_META[currentLevelIndex];
+    if (!meta) return;
+    
+    // Находим все уровни этого этапа
+    const stageLevels = STAGES_META.filter(m => m.stageId === meta.stageId);
+    
+    stageLevels.forEach((levelMeta, idx) => {
+        const segment = document.createElement('div');
+        segment.className = 'progress-segment';
+        
+        if (idx < meta.indexInStage) {
+            segment.classList.add('completed');
+        } else if (idx === meta.indexInStage) {
+            segment.classList.add('current');
+        }
+        
+        container.appendChild(segment);
+    });
 }
 
 function updateTargetWordsUI() {
@@ -478,9 +641,6 @@ function updateTargetWordsUI() {
         container.appendChild(el);
     });
     
-    document.getElementById('found-count').textContent = gameState.foundWords.length;
-    document.getElementById('total-count').textContent = gameState.targetWords.length;
-
     // Update Hint Button State
     const hintBtn = document.getElementById('hint-btn');
     if (hintBtn) {
@@ -854,8 +1014,12 @@ function removeSelectedTiles() {
 }
 
 function showWinScreen() {
-    const levelBonus = 100 + (5 * (currentLevelIndex + 1));
-    gameState.scoreDetails.bonus = levelBonus;
+    const levelConfig = LEVELS_DATA[currentLevelIndex];
+    const baseBonus = 100 + (5 * (currentLevelIndex + 1));
+    const starsBonus = (levelConfig?.difficulty?.stars ?? 1) * 25;
+    const levelBonus = baseBonus + starsBonus;
+    gameState.scoreDetails.bonus = baseBonus;
+    gameState.scoreDetails.difficultyBonus = starsBonus;
     gameState.currentLevelScore += levelBonus;
     
     // Обновляем общий счет
@@ -866,6 +1030,7 @@ function showWinScreen() {
     document.getElementById('score-words').textContent = `+${gameState.scoreDetails.words}`;
     document.getElementById('score-hidden').textContent = `+${gameState.scoreDetails.hidden}`;
     document.getElementById('score-level-bonus').textContent = `+${gameState.scoreDetails.bonus}`;
+    document.getElementById('score-difficulty-bonus').textContent = `+${gameState.scoreDetails.difficultyBonus}`;
     
     // Анимированный счетчик для текущего счета уровня
     animateValue('score-level-total', 0, gameState.currentLevelScore, 1000);

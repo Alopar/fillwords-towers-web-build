@@ -27,41 +27,106 @@ body {
 
 /* Header */
 .game-header {
-    padding: 15px;
+    padding: 10px 15px;
     background-color: #2c3e50;
     color: white;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     z-index: 10;
     display: flex;
     flex-direction: column;
-    align-items: center; /* Центрируем содержимое */
-    text-align: center;
+    gap: 8px;
 }
 
-.level-info, .progress-info {
+.header-top {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.level-main {
+    font-size: 1.25em;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stars {
+    display: inline-flex;
+    align-items: center;
+    letter-spacing: 3px;
+}
+
+.star-filled {
+    color: #f1c40f;
     font-size: 1.1em;
-    margin-bottom: 5px;
+    text-shadow: 0 0 6px rgba(241, 196, 15, 0.6);
+}
+
+.star-empty {
+    color: #95a5a6;
+    font-size: 1.1em;
+    opacity: 0.9;
+}
+
+/* Stage Progress Bar */
+.stage-progress-container {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 2px 0;
+}
+
+.stage-progress-bar {
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
+.progress-segment {
+    flex: 1;
+    height: 100%;
+    margin-right: 2px;
+    background-color: #95a5a6;
+    transition: all 0.3s ease;
+}
+
+.progress-segment:last-child {
+    margin-right: 0;
+}
+
+.progress-segment.completed {
+    background-color: #f1c40f;
+    box-shadow: 0 0 6px rgba(241, 196, 15, 0.5);
+}
+
+.progress-segment.current {
+    background-color: #3498db;
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.6);
 }
 
 .target-words {
-    margin-top: 10px;
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    font-size: 0.9em;
-    justify-content: center; /* Центрируем список слов */
+    gap: 8px;
+    font-size: 0.85em;
+    justify-content: center;
 }
 
 .target-word {
-    padding: 4px 12px;
-    border-radius: 6px;
-    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 5px;
+    font-weight: 700;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: all 0.2s ease;
     font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     display: inline-flex;
     justify-content: center;
+    min-width: 45px;
 }
 
 .target-word.found {
@@ -177,6 +242,12 @@ body {
     background-color: #f1c40f;
     box-shadow: 0 4px 0 #f39c12;
     color: #2c3e50;
+}
+
+.hints-btn {
+    background-color: #9b59b6;
+    box-shadow: 0 4px 0 #8e44ad;
+    color: white;
 }
 
 .reset-btn {
@@ -657,6 +728,10 @@ body {
     color: #7f8c8d;
     font-style: italic;
     margin: 20px 0;
+}
+
+.journal-empty-msg.hidden {
+    display: none;
 }
 
 .modal-content p {

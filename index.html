@@ -9,8 +9,19 @@
 <body>
     <div class="game-container">
         <header class="game-header">
-            <div class="level-info">Уровень: <span id="level-display">1</span></div>
-            <div class="progress-info">Найдено: <span id="found-count">0</span> / <span id="total-count">0</span></div>
+            <div class="header-top">
+                <div class="level-main">
+                    Уровень <span id="level-display">1</span>
+                    <span id="stars-display" class="stars"></span>
+                </div>
+            </div>
+            
+            <div class="stage-progress-container">
+                <div class="stage-progress-bar" id="stage-progress-bar">
+                    <!-- Сегменты прогресса будут здесь -->
+                </div>
+            </div>
+
             <div class="target-words" id="target-words-list">
                 <!-- Слова будут здесь -->
             </div>
@@ -24,6 +35,7 @@
             </div>
             <div class="side-controls-right">
                 <button id="journal-btn" class="side-btn journal-btn" title="Журнал слов">📖</button>
+                <button id="hints-btn" class="side-btn hints-btn" title="Подсказки">❔</button>
                 <button id="reset-progress-btn" class="side-btn reset-btn" title="Сбросить прогресс">🗑️</button>
             </div>
             <div class="game-board" id="game-board">
@@ -58,6 +70,10 @@
                     <span class="score-label">Бонус уровня</span>
                     <span class="score-value" id="score-level-bonus">+0</span>
                 </div>
+                <div class="score-row">
+                    <span class="score-label">Бонус за сложность</span>
+                    <span class="score-value" id="score-difficulty-bonus">+0</span>
+                </div>
                 <div class="score-total-row">
                     <span>Всего за уровень</span>
                     <span id="score-level-total">0</span>
@@ -75,7 +91,7 @@
         <div class="modal-content journal-content">
             <button id="close-journal-btn" class="close-btn">&times;</button>
             <div class="modal-header">
-                <h2>Журнал найденных слов</h2>
+                <h2>Журнал слов</h2>
             </div>
             <div id="journal-list" class="journal-list">
                 <!-- Список всех найденных скрытых слов -->
@@ -109,6 +125,19 @@
                 <p id="instruction-text"></p>
             </div>
             <button id="start-level-btn" class="next-btn">Понятно</button>
+        </div>
+    </div>
+
+    <div id="hints-modal" class="modal hidden">
+        <div class="modal-content instruction-content">
+            <button id="close-hints-btn" class="close-btn">&times;</button>
+            <div class="modal-header">
+                <h2>Подсказки</h2>
+            </div>
+            <div class="instruction-body">
+                <p id="hints-instruction-text"></p>
+            </div>
+            <button id="hints-next-btn" class="next-btn">Далее</button>
         </div>
     </div>
 
