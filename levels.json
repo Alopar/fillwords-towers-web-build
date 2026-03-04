@@ -12,7 +12,7 @@
       "id": 2,
       "levels": [
         {"id": 4, "cols": 3, "rows": 3, "words": ["СОН", "МИР", "ЛЕС"], "follow": true, "difficulty": {"colored": true, "order": "linear", "letters": "direct", "stars": 1}},
-        {"id": 5, "cols": 3, "rows": 3, "words": ["НОС", "ДОМ", "ШАР"], "follow": true, "difficulty": {"colored": true, "order": "linear", "letters": "mirror", "stars": 2}},
+        {"id": 5, "cols": 3, "rows": 3, "words": ["НОС", "ДОМ", "ШАР"], "follow": true, "difficulty": {"colored": false, "order": "linear", "letters": "mirror", "stars": 2}},
         {"id": 6, "cols": 3, "rows": 3, "words": ["КОТ", "РОТ", "ЛЁД"], "follow": true, "difficulty": {"colored": false, "order": "linear", "letters": "random", "stars": 3}}
       ]
     },
@@ -20,8 +20,8 @@
       "id": 3,
       "levels": [
         {"id": 7, "cols": 3, "rows": 4, "words": ["ДЫМ", "ХОД", "КОД", "ГАЗ"], "follow": true, "difficulty": {"colored": true, "order": "linear", "letters": "mirror", "stars": 1}},
-        {"id": 8, "cols": 3, "rows": 4, "words": ["СУП", "ЧАЙ", "СОК", "МЁД"], "follow": true, "difficulty": {"colored": true, "order": "linear", "letters": "random", "stars": 2}},
-        {"id": 9, "cols": 3, "rows": 5, "words": ["ШУМ", "ВЕК", "ЧАС", "БОЙ", "РЯД"], "follow": true, "difficulty": {"colored": true, "order": "cluster", "letters": "direct", "stars": 2}},
+        {"id": 8, "cols": 3, "rows": 4, "words": ["СУП", "ЧАЙ", "СОК", "МЁД"], "follow": true, "difficulty": {"colored": false, "order": "linear", "letters": "random", "stars": 2}},
+        {"id": 9, "cols": 3, "rows": 5, "words": ["ШУМ", "ВЕК", "ЧАС", "БОЙ", "РЯД"], "follow": true, "difficulty": {"colored": false, "order": "cluster", "letters": "direct", "stars": 2}},
         {"id": 10, "cols": 3, "rows": 5, "words": ["САД", "ЗАЛ", "ЛУГ", "ВАЛ", "МЯЧ"],"follow" : true,"difficulty" : {"colored" : false,"order" : "cluster","letters" : "direct","stars" : 3}}
       ]
     },
@@ -29,7 +29,7 @@
       "id": 4,
       "levels": [
         {"id": 11, "cols": 4, "rows": 4, "words": ["игра", "путь", "ключ", "ночь"], "follow": true, "difficulty": {"colored": true, "order": "linear", "letters": "mirror", "stars": 1}},
-        {"id": 12, "cols": 4, "rows": 4, "words": ["свет", "враг", "друг", "поле"], "follow": true, "difficulty": {"colored": true, "order": "linear", "letters": "keep_base", "stars": 2}},
+        {"id": 12, "cols": 4, "rows": 4, "words": ["свет", "враг", "друг", "поле"], "follow": true, "difficulty": {"colored": false, "order": "linear", "letters": "keep_base", "stars": 2}},
         {"id": 13, "cols": 4, "rows": 5, "words": ["море", "план", "тема", "знак", "угол"], "follow": true, "difficulty": {"colored": false, "order": "linear", "letters": "keep_base", "stars": 2}},
         {"id": 14, "cols": 4, "rows": 5, "words": ["хлеб", "рыба", "снег", "лист", "круг"],"follow" : true,"difficulty" : {"colored" : false,"order" : "linear","letters" : "keep_base","stars" : 3}}
       ]
